@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Toggle soleil / lune</title>
+<style>
+:root{
+  --sky:#8fd3ff; --text:#10304a; --track:#6bbcf5; --knob:#ffc933;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+:root[data-theme="dark"]{ --sky:#0b1030; --text:#e8ecff; --track:#1d2559; --knob:#e9ecf5; }
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{
+  display:grid;place-items:center;
+  background:var(--sky);color:var(--text);
+  font-family:"Trebuchet MS","Segoe UI",sans-serif;
+  transition:background .8s ease,color .8s ease;
+  overflow:hidden;
+}
+main{text-align:center;display:grid;gap:28px;justify-items:center}
+h1{font-size:clamp(1.6rem,6vw,2.6rem);font-weight:700;letter-spacing:-.02em}
+p{opacity:.75}
+
+.toggle{
+  position:relative;width:200px;height:96px;border-radius:96px;
+  border:0;cursor:pointer;background:var(--track);
+  box-shadow:inset 0 4px 12px rgba(0,0,0,.25),0 10px 30px rgba(0,0,0,.2);
+  transition:background .8s ease;overflow:hidden;
+}
+.toggle:focus-visible{outline:3px solid var(--text);outline-offset:4px}
+
+/* nuages */
+.cloud{position:absolute;background:#fff;border-radius:50px;height:22px;transition:transform .7s cubic-bezier(.5,0,.2,1),opacity .5s}
+.c1{width:60px;right:18px;bottom:16px}
+.c2{width:44px;right:56px;bottom:34px;opacity:.85}
+.c3{width:30px;right:12px;bottom:46px;opacity:.7}
+[data-theme="dark"] .cloud{transform:translateY(60px);opacity:0}
+
+/* étoiles */
+.star{position:absolute;width:5px;height:5px;background:#fff;border-radius:50%;opacity:0;transform:scale(0);
+  transition:transform .5s cubic-bezier(.3,1.6,.5,1),opacity .4s}
+.s1{left:22px;top:20px}.s2{left:48px;top:58px}.s3{left:30px;top:44px;width:3px;height:3px}
+.s4{left:70px;top:26px;width:3px;height:3px}.s5{left:78px;top:66px}
+[data-theme="dark"] .star{opacity:1;transform:scale(1)}
+[data-theme="dark"] .s1{transition-delay:.35s}[data-theme="dark"] .s2{transition-delay:.45s}
+[data-theme="dark"] .s3{transition-delay:.55s}[data-theme="dark"] .s4{transition-delay:.65s}
+[data-theme="dark"] .s5{transition-delay:.75s}
+
+/* bouton soleil -> lune */
+.knob{
+  position:absolute;top:8px;left:8px;width:80px;height:80px;
+  transition:transform .8s cubic-bezier(.6,-.2,.2,1.2);
+}
+[data-theme="dark"] .knob{transform:translateX(104px) rotate(-40deg)}
+.knob svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
+
+.core{fill:var(--knob);transition:fill .8s}
+.rays{transform-origin:40px 40px;transition:transform .8s cubic-bezier(.6,-.2,.2,1.2),opacity .5s;
+  stroke:#ffc933;stroke-width:5;stroke-linecap:round}
+[data-theme="dark"] .rays{transform:scale(.3) rotate(90deg);opacity:0}
+.bite{transition:transform .8s cubic-bezier(.6,-.2,.2,1.2);transform:translate(40px,-40px)}
+[data-theme="dark"] .bite{transform:translate(0,0)}
+.crater{fill:#c9cfe6;opacity:0;transition:opacity .5s .4s}
+[data-theme="dark"] .crater{opacity:.8}
+
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important}}
+</style>
+</head>
+<body>
+<main>
+  <h1 id="title">Bonne journée</h1>
+  <button class="toggle" id="t" aria-label="Changer de thème" aria-pressed="false">
+    <span class="cloud c1"></span><span class="cloud c2"></span><span class="cloud c3"></span>
+    <span class="star s1"></span><span class="star s2"></span><span class="star s3"></span>
+    <span class="star s4"></span><span class="star s5"></span>
+    <span class="knob">
+      <svg viewBox="0 0 80 80" aria-hidden="true">
+        <defs>
+          <mask id="m">
+            <rect width="80" height="80" fill="#fff" x="-20" y="-20" />
+            <circle class="bite" cx="52" cy="28" r="26" fill="#000"/>
+          </mask>
+        </defs>
+        <g class="rays">
+          <line x1="40" y1="2" x2="40" y2="9"/><line x1="40" y1="71" x2="40" y2="78"/>
+          <line x1="2" y1="40" x2="9" y2="40"/><line x1="71" y1="40" x2="78" y2="40"/>
+          <line x1="13" y1="13" x2="18" y2="18"/><line x1="62" y1="62" x2="67" y2="67"/>
+          <line x1="67" y1="13" x2="62" y2="18"/><line x1="13" y1="67" x2="18" y2="62"/>
+        </g>
+        <g mask="url(#m)">
+          <circle class="core" cx="40" cy="40" r="26"/>
+        </g>
+        <circle class="crater" cx="30" cy="48" r="4"/>
+        <circle class="crater" cx="42" cy="58" r="2.5"/>
+      </svg>
+    </span>
+  </button>
+  <p id="sub">Clique sur le soleil</p>
+</main>
+<script>
+const root=document.documentElement,btn=document.getElementById('t');
+const title=document.getElementById('title'),sub=document.getElementById('sub');
+function apply(dark){
+  root.dataset.theme=dark?'dark':'light';
+  btn.setAttribute('aria-pressed',dark);
+  title.textContent=dark?'Bonne nuit':'Bonne journée';
+  sub.textContent=dark?'Clique sur la lune':'Clique sur le soleil';
+}
+btn.addEventListener('click',()=>apply(root.dataset.theme!=='dark'));
+</script>
+</body>
+</html>
